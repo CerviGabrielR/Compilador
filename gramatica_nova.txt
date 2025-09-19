@@ -1,0 +1,107 @@
+PROGRAM         -> STAT_OR_FUNCLIST
+STAT_OR_FUNCLIST-> STATEMENT
+                 | FUNCLIST
+                 | ε
+
+FUNCLIST        -> FUNCDEF FUNCLIST
+                 | FUNCDEF
+
+FUNCDEF         -> def ident ( PARAMLIST ) { STATELIST }
+
+PARAMLIST       -> PARAM_LIST
+                 | ε
+
+PARAM_LIST      -> PARAM
+                 | PARAM , PARAM_LIST
+
+PARAM           -> TYPE ident
+
+STATEMENT       -> VARDECL ;
+                 | ATRIBSTAT ;
+                 | PRINTSTAT ;
+                 | READSTAT ;
+                 | RETURNSTAT ;
+                 | IFSTAT
+                 | FORSTAT
+                 | { STATELIST }
+                 | break ;
+                 | ;
+
+VARDECL         -> TYPE ident ARRAYS_OPT
+
+ARRAYS_OPT      -> ARRAY_1
+                 | ε
+
+ARRAY_1         -> [ int_constant ] ARRAY_1
+                 | [ int_constant ]
+
+ATRIBSTAT       -> LVALUE = RHS
+
+RHS             -> EXPRESSION
+                 | ALLOCEXPRESSION
+                 | FUNCCALL
+
+FUNCCALL        -> ident ( PARAMLISTCALL )
+
+PARAMLISTCALL   -> ARG_LIST
+                 | ε
+
+ARG_LIST        -> ident
+                 | ident , ARG_LIST
+
+PRINTSTAT       -> print EXPRESSION
+
+READSTAT        -> read LVALUE
+
+RETURNSTAT      -> return
+
+IFSTAT          -> if ( EXPRESSION ) STATEMENT
+                 | if ( EXPRESSION ) STATEMENT else STATEMENT
+
+FORSTAT         -> for ( ATRIBSTAT ; EXPRESSION ; ATRIBSTAT ) STATEMENT
+
+STATELIST       -> STATEMENT STATELIST
+                 | ε
+
+ALLOCEXPRESSION -> new TYPE ALLOC_BRACKETS
+
+ALLOC_BRACKETS  -> ALLOC_BRACKETS_1
+
+ALLOC_BRACKETS_1-> [ NUMEXPRESSION ]                /* uma ocorrência */
+                 | [ NUMEXPRESSION ] ALLOC_BRACKETS_1  /* uma ou mais */
+
+EXPRESSION      -> NUMEXPRESSION COMP_TAIL
+
+COMP_TAIL       -> RELOP NUMEXPRESSION
+                 | ε
+
+RELOP           -> < | > | <= | >= | == | !=
+
+NUMEXPRESSION   -> TERM NUMEXPR_TAIL
+
+NUMEXPR_TAIL    -> + TERM NUMEXPR_TAIL
+                 | - TERM NUMEXPR_TAIL
+                 | ε
+
+TERM            -> UNARYEXPR TERM_TAIL
+
+TERM_TAIL       -> * UNARYEXPR TERM_TAIL
+                 | / UNARYEXPR TERM_TAIL
+                 | % UNARYEXPR TERM_TAIL
+                 | ε
+
+UNARYEXPR       -> + FACTOR
+                 | - FACTOR
+                 | FACTOR
+
+FACTOR          -> int_constant
+                 | float_constant
+                 | string_constant
+                 | null
+                 | LVALUE
+                 | ( NUMEXPRESSION )
+
+LVALUE          -> ident LVALUE_TAIL
+
+LVALUE_TAIL     -> [ NUMEXPRESSION ] LVALUE_TAIL
+                 | ε
