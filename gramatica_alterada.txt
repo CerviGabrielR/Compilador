@@ -1,0 +1,53 @@
+PROGRAM         -> STATEMENT | FUNCLIST | ε
+FUNCLIST        -> FUNCDEF FUNCLIST | FUNCDEF
+FUNCDEF         -> def ident ( PARAMLIST ) { STATELIST }
+PARAMLIST       -> PARAM_SEQUENCE | ε
+PARAM_SEQUENCE  -> PARAM | PARAM , PARAM_SEQUENCE
+PARAM           -> TYPE ident
+TYPE            -> int | float | string
+STATEMENT       -> VARDECL ;
+                 | ATRIBSTAT ;
+                 | PRINTSTAT ;
+                 | READSTAT ;
+                 | RETURNSTAT ;
+                 | IFSTAT
+                 | FORSTAT
+                 | { STATELIST }
+                 | break ;
+                 | ;
+STATELIST       -> STATEMENT | STATEMENT STATELIST
+VARDECL         -> TYPE ident INDEX_LIST
+INDEX_LIST      -> [ int_constant ] INDEX_LIST | ε
+ATRIBSTAT       -> LVALUE = ASSIGN_RHS
+ASSIGN_RHS      -> EXPRESSION | ALLOCEXPRESSION | FUNCCALL
+FUNCCALL        -> ident ( PARAMLISTCALL )
+PARAMLISTCALL   -> IDENT_SEQUENCE | ε
+IDENT_SEQUENCE  -> ident | ident , IDENT_SEQUENCE
+PRINTSTAT       -> print EXPRESSION
+READSTAT        -> read LVALUE
+RETURNSTAT      -> return
+IFSTAT          -> if ( EXPRESSION ) STATEMENT ELSE_PART
+ELSE_PART       -> else STATEMENT | ε
+FORSTAT         -> for ( ATRIBSTAT ; EXPRESSION ; ATRIBSTAT ) STATEMENT
+ALLOCEXPRESSION -> new TYPE DIMENSION_LIST
+DIMENSION_LIST  -> DIMENSION | DIMENSION DIMENSION_LIST
+DIMENSION       -> [ NUMEXPRESSION ]
+EXPRESSION      -> NUMEXPRESSION EXPR_TAIL
+EXPR_TAIL       -> RELOP NUMEXPRESSION | ε
+RELOP           -> < | > | <= | >= | == | !=
+NUMEXPRESSION   -> TERM NUMEXPR_TAIL
+NUMEXPR_TAIL    -> ADDOP TERM NUMEXPR_TAIL | ε
+ADDOP           -> + | -
+TERM            -> UNARYEXPR TERM_TAIL
+TERM_TAIL       -> MULOP UNARYEXPR TERM_TAIL | ε
+MULOP           -> * | / | %
+UNARYEXPR       -> SIGN FACTOR | FACTOR
+SIGN            -> + | -
+FACTOR          -> int_constant
+                 | float_constant
+                 | string_constant
+                 | null
+                 | LVALUE
+                 | ( NUMEXPRESSION )
+LVALUE          -> ident INDEX_ACCESS_LIST
+INDEX_ACCESS_LIST -> [ NUMEXPRESSION ] INDEX_ACCESS_LIST | ε
