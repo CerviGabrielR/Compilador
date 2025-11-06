@@ -1,5 +1,5 @@
 class Escopo:
-    """Nó da árvore de escopos."""
+    #Nó da árvore de escopos
     _id = 0
 
     def __init__(self, pai=None):
@@ -20,7 +20,7 @@ class Escopo:
 
 
 class Parser:
-    """Analisador LL(1) com SDT para construir a árvore de escopos."""
+    #Analisador LL1 com SDT para construir a árvore de escopos.
     def __init__(self, entrada):
         self.tokens = [c for c in entrada if c in "{}"]
         self.pos = 0
@@ -59,10 +59,7 @@ class Parser:
         else:
             raise SyntaxError(f"Token inesperado: {self.lookahead()}")
 
-
-# ------------------------------
 # Execução
-# ------------------------------
 if __name__ == "__main__":
     for palavra in ["{}{{}}", "{{{}}}"]:
         print(f"\nEntrada: {palavra}")
