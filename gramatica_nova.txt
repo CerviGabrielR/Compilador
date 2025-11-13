@@ -1,107 +1,92 @@
-PROGRAM         -> STAT_OR_FUNCLIST
-STAT_OR_FUNCLIST-> STATEMENT
-                 | FUNCLIST
-                 | ε
-
-FUNCLIST        -> FUNCDEF FUNCLIST
-                 | FUNCDEF
-
-FUNCDEF         -> def ident ( PARAMLIST ) { STATELIST }
-
-PARAMLIST       -> PARAM_LIST
-                 | ε
-
-PARAM_LIST      -> PARAM
-                 | PARAM , PARAM_LIST
-
-PARAM           -> TYPE ident
-
-STATEMENT       -> VARDECL ;
-                 | ATRIBSTAT ;
-                 | PRINTSTAT ;
-                 | READSTAT ;
-                 | RETURNSTAT ;
-                 | IFSTAT
-                 | FORSTAT
-                 | { STATELIST }
-                 | break ;
-                 | ;
-
-VARDECL         -> TYPE ident ARRAYS_OPT
-
-ARRAYS_OPT      -> ARRAY_1
-                 | ε
-
-ARRAY_1         -> [ int_constant ] ARRAY_1
-                 | [ int_constant ]
-
-ATRIBSTAT       -> LVALUE = RHS
-
-RHS             -> EXPRESSION
-                 | ALLOCEXPRESSION
-                 | FUNCCALL
-
-FUNCCALL        -> ident ( PARAMLISTCALL )
-
-PARAMLISTCALL   -> ARG_LIST
-                 | ε
-
-ARG_LIST        -> ident
-                 | ident , ARG_LIST
-
-PRINTSTAT       -> print EXPRESSION
-
-READSTAT        -> read LVALUE
-
-RETURNSTAT      -> return
-
-IFSTAT          -> if ( EXPRESSION ) STATEMENT
-                 | if ( EXPRESSION ) STATEMENT else STATEMENT
-
-FORSTAT         -> for ( ATRIBSTAT ; EXPRESSION ; ATRIBSTAT ) STATEMENT
-
-STATELIST       -> STATEMENT STATELIST
-                 | ε
-
+PROGRAM -> STAT_OR_FUNCLIST
+STAT_OR_FUNCLIST -> STATEMENT
+STAT_OR_FUNCLIST -> FUNCLIST
+STAT_OR_FUNCLIST -> ''
+FUNCLIST -> FUNCDEF MORE_FUNC
+MORE_FUNC -> FUNCLIST
+MORE_FUNC -> ''
+FUNCDEF -> def id ( PARAMLIST ) { STATELIST }
+PARAMLIST -> PARAM MORE_PARAM
+MORE_PARAM -> , PARAMLIST
+MORE_PARAM -> ''
+PARAM -> TYPE id
+TYPE -> int
+TYPE -> float
+TYPE -> string
+STATEMENT -> VARDECL ;
+STATEMENT -> ATRIBSTAT ;
+STATEMENT -> PRINTSTAT ;
+STATEMENT -> READSTAT ;
+STATEMENT -> RETURNSTAT ;
+STATEMENT -> IFSTAT
+STATEMENT -> FORSTAT
+STATEMENT -> { STATELIST }
+STATEMENT -> break ;
+STATEMENT -> ;
+VARDECL -> TYPE id MAYBE_ARRAY
+MAYBE_ARRAY -> ARRAY
+MAYBE_ARRAY -> ''
+ARRAY -> [ int_constant ] MORE_ARRAYS
+MORE_ARRAYS -> ARRAY
+MORE_ARRAYS -> ''
+ATRIBSTAT -> LVALUE = ATRIB_TAIL
+ATRIB_TAIL -> ALLOCEXPRESSION
+ATRIB_TAIL -> + FACTOR TAIL_PRODS
+ATRIB_TAIL -> - FACTOR TAIL_PRODS
+ATRIB_TAIL -> int_constant TAIL_PRODS
+ATRIB_TAIL -> float_constant TAIL_PRODS
+ATRIB_TAIL -> string_constant TAIL_PRODS
+ATRIB_TAIL -> null TAIL_PRODS
+ATRIB_TAIL -> ( NUMEXPRESSION ) TAIL_PRODS
+ATRIB_TAIL -> id FUNCCALL_OR_ATRIB
+TAIL_PRODS -> TERM_TAIL NUMEXPR_TAIL COMP_TAIL
+FUNCCALL_OR_ATRIB -> ( PARAMLISTCALL )
+FUNCCALL_OR_ATRIB -> LVALUE_TAIL TERM_TAIL NUMEXPR_TAIL COMP_TAIL
+PARAMLISTCALL -> ARGLIST
+PARAMLISTCALL -> ''
+ARGLIST -> id MORE_ARGS
+MORE_ARGS -> , ARGLIST
+MORE_ARGS -> ''
+PRINTSTAT -> print EXPRESSION
+READSTAT -> read LVALUE
+RETURNSTAT -> return
+IFSTAT -> if ( EXPRESSION ) { STATELIST } ELSESTAT
+ELSESTAT -> else { STATELIST }
+ELSESTAT -> ''
+FORSTAT -> for ( ATRIBSTAT ; EXPRESSION ; ATRIBSTAT ) STATEMENT
+STATELIST -> STATEMENT STATELIST
+STATELIST -> ''
 ALLOCEXPRESSION -> new TYPE ALLOC_BRACKETS
-
-ALLOC_BRACKETS  -> ALLOC_BRACKETS_1
-
-ALLOC_BRACKETS_1-> [ NUMEXPRESSION ]                /* uma ocorrência */
-                 | [ NUMEXPRESSION ] ALLOC_BRACKETS_1  /* uma ou mais */
-
-EXPRESSION      -> NUMEXPRESSION COMP_TAIL
-
-COMP_TAIL       -> RELOP NUMEXPRESSION
-                 | ε
-
-RELOP           -> < | > | <= | >= | == | !=
-
-NUMEXPRESSION   -> TERM NUMEXPR_TAIL
-
-NUMEXPR_TAIL    -> + TERM NUMEXPR_TAIL
-                 | - TERM NUMEXPR_TAIL
-                 | ε
-
-TERM            -> UNARYEXPR TERM_TAIL
-
-TERM_TAIL       -> * UNARYEXPR TERM_TAIL
-                 | / UNARYEXPR TERM_TAIL
-                 | % UNARYEXPR TERM_TAIL
-                 | ε
-
-UNARYEXPR       -> + FACTOR
-                 | - FACTOR
-                 | FACTOR
-
-FACTOR          -> int_constant
-                 | float_constant
-                 | string_constant
-                 | null
-                 | LVALUE
-                 | ( NUMEXPRESSION )
-
-LVALUE          -> ident LVALUE_TAIL
-
-LVALUE_TAIL     -> [ NUMEXPRESSION ] LVALUE_TAIL
-                 | ε
+ALLOC_BRACKETS -> [ NUMEXPRESSION ] MORE_ALLOC_BRACKETS
+MORE_ALLOC_BRACKETS -> ALLOC_BRACKETS
+MORE_ALLOC_BRACKETS -> ''
+EXPRESSION -> NUMEXPRESSION COMP_TAIL
+COMP_TAIL -> RELOP NUMEXPRESSION
+COMP_TAIL -> ''
+RELOP -> <
+RELOP -> >
+RELOP -> <=
+RELOP -> >=
+RELOP -> ==
+RELOP -> !=
+NUMEXPRESSION -> TERM NUMEXPR_TAIL
+NUMEXPR_TAIL -> + TERM NUMEXPR_TAIL
+NUMEXPR_TAIL -> - TERM NUMEXPR_TAIL
+NUMEXPR_TAIL -> ''
+TERM -> UNARYEXPR TERM_TAIL
+TERM_TAIL -> * UNARYEXPR TERM_TAIL
+TERM_TAIL -> / UNARYEXPR TERM_TAIL
+TERM_TAIL -> % UNARYEXPR TERM_TAIL
+TERM_TAIL -> ''
+UNARYEXPR -> + FACTOR
+UNARYEXPR -> - FACTOR
+UNARYEXPR -> FACTOR
+FACTOR -> int_constant
+FACTOR -> float_constant
+FACTOR -> string_constant
+FACTOR -> null
+FACTOR -> LVALUE
+FACTOR -> ( NUMEXPRESSION )
+LVALUE -> id LVALUE_TAIL
+LVALUE_TAIL -> [ NUMEXPRESSION ] LVALUE_TAIL
+LVALUE_TAIL -> ''
