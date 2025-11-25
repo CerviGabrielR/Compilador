@@ -18,7 +18,7 @@ int main() {
             return;
         }
 
-        )";
+    )";
 
 
     std::cout << "=== Código sendo analisado ===\n";
@@ -30,7 +30,7 @@ int main() {
         return 1;
     }
 
-    std::cout << "=== TOKENS ===\n";
+    std::cout << "=== TOKENS GERADOS ===\n";
     for (const auto& t : lex.getTokens()) {
         std::cout << t << "\n";
     }
