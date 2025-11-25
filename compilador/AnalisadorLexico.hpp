@@ -21,19 +21,18 @@ public:
     ~AnalisadorLexico();
 
 private:
-    std::vector<std::string> tokens {};
+    std::vector<std::string> tokens;
     std::unordered_map<std::string, Simbolo> symbolTable;
 
-    std::string_view source {};
-    std::size_t pos {0};
-    std::size_t currentLine {1};
-    std::size_t currentColumn {0};
+    std::string_view source;
+    std::size_t pos;
+    std::size_t currentLine;
+    std::size_t currentColumn;
 
     char peek() const;
     char advance();
     bool isAtEnd() const;
 
-    // lógica de análise
     void skipWhitespace();
     bool scanToken();
     bool scanIdentifierOrKeyword(char firstChar);

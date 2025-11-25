@@ -35,6 +35,7 @@ AnalisadorLexico::AnalisadorLexico()
 
 AnalisadorLexico::~AnalisadorLexico() = default;
 
+
 char AnalisadorLexico::peek() const {
     if (isAtEnd()) {
         return '\0';
@@ -85,6 +86,7 @@ void AnalisadorLexico::addIdentifierOccurrence(const std::string& name,
     }
 }
 
+
 bool AnalisadorLexico::scanIdentifierOrKeyword(char firstChar) {
     std::string lexeme;
     lexeme.push_back(firstChar);
@@ -103,9 +105,9 @@ bool AnalisadorLexico::scanIdentifierOrKeyword(char firstChar) {
     }
 
     if (KEYWORDS.find(lexeme) != KEYWORDS.end()) {
-        tokens.push_back(lexeme);
+        tokens.push_back(lexeme);  // keyword mantém o lexema
     } else {
-        tokens.push_back(lexeme);
+        tokens.push_back("id");    // <-- ALTERADO
         addIdentifierOccurrence(lexeme, startLine, startColumn);
     }
 
@@ -155,11 +157,7 @@ bool AnalisadorLexico::scanNumber(char firstChar) {
         }
     }
 
-    tokens.push_back(lexeme);
-
-    (void)startLine;
-    (void)startColumn;
-    (void)isFloat;
+    tokens.push_back("num");  // <-- ALTERADO
 
     return true;
 }
@@ -170,7 +168,7 @@ bool AnalisadorLexico::scanString() {
     while (!isAtEnd()) {
         char c = advance();
         if (c == '"') {
-            tokens.push_back("\"" + lexeme + "\"");
+            tokens.push_back("string"); // <-- ALTERADO
             return true;
         }
         if (c == '\n') {
@@ -269,6 +267,7 @@ bool AnalisadorLexico::scanToken() {
     return scanOperatorOrDelimiter(c);
 }
 
+
 bool AnalisadorLexico::analisar(std::string_view input) {
     tokens.clear();
     symbolTable.clear();
@@ -283,6 +282,7 @@ bool AnalisadorLexico::analisar(std::string_view input) {
         if (isAtEnd()) {
             break;
         }
+
         if (!scanToken()) {
             return false;
         }
