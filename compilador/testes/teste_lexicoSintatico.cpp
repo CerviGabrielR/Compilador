@@ -6,7 +6,7 @@
 int main() {
     // 1. Instancia os dois analisadores
     AnalisadorLexico lex;
-    AnalisadorSintatico sintatico("caminho/para/gramatica.txt", lex.getTokens());
+    AnalisadorSintatico sintatico("../gramaticaLL1.txt", lex.getTokens());
 
 
     // Código de teste (Válido segundo sua gramática)
