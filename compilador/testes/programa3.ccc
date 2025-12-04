@@ -1,0 +1,113 @@
+def incCinco(int v) {
+    int r;
+    r = v + 5;
+    return r;
+}
+
+def produtoSimples(int a, int b) {
+    int r;
+    int i;
+    r = 0;
+    for(i = 0; i < b; i = i + 1) {
+        r = r + a;
+    }
+    return r;
+}
+
+def main(int base) {
+    int i;
+    int j;
+    int total;
+    int temp;
+    float ff;
+    string tag;
+    i = base;
+    j = incCinco(i);
+    total = produtoSimples(i, j);
+    temp = total + j;
+    ff = temp + 0.5;
+    tag = "ok";
+    if(ff > 0) {
+        tag = "positivo";
+    } else {
+        tag = "negativo";
+    }
+    print tag;
+    for(i = 0; i < 3; i = i + 1) {
+        for(j = 0; j < 3; j = j + 1) {
+            total = total + i + j;
+        }
+    }
+    if(total > base) {
+        print total;
+    } else {
+        print base;
+    }
+    temp = temp + 1;
+    total = total + 1;
+    i = i + 1;
+    j = j + 1;
+    ff = ff + 1.0;
+    tag = tag;
+    if(temp > total) {
+        temp = temp + total;
+    } else {
+        total = total + temp;
+    }
+    print temp;
+    print total;
+    print ff;
+    read i;
+    for(j = 0; j < 2; j = j + 1) {
+        if(i > j) {
+            total = total + i;
+        } else {
+            total = total + j;
+        }
+    }
+    ff = ff + total;
+    tag = tag;
+    i = i + 2;
+    j = j + 2;
+    total = total + 2;
+    temp = temp + 2;
+    i = i + 3;
+    j = j + 3;
+    total = total + 3;
+    temp = temp + 3;
+    i = i + 4;
+    j = j + 4;
+    total = total + 4;
+    temp = temp + 4;
+    i = i + 5;
+    j = j + 5;
+    total = total + 5;
+    temp = temp + 5;
+    i = i + 6;
+    j = j + 6;
+    total = total + 6;
+    temp = temp + 6;
+    i = i + 7;
+    j = j + 7;
+    total = total + 7;
+    temp = temp + 7;
+    i = i + 8;
+    j = j + 8;
+    total = total + 8;
+    temp = temp + 8;
+    i = i + 9;
+    j = j + 9;
+    total = total + 9;
+    temp = temp + 9;
+    ff = ff + 2.0;
+    if(i > temp) {
+        i = i;
+    } else {
+        temp = temp;
+    }
+    print i;
+    print j;
+    print total;
+    print ff;
+    return temp;
+}

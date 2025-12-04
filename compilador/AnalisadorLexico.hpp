@@ -10,8 +10,19 @@ public:
 
     bool analisar(std::string_view input);
 
+    struct TokenInfo {
+        std::string type;   // token class, e.g. id, int_constant, '+'
+        std::string lexeme; // original lexeme when relevant
+        std::size_t line;
+        std::size_t column;
+    };
+
     const std::vector<std::string>& getTokens() const {
         return tokens;
+    }
+
+    const std::vector<TokenInfo>& getTokensInfo() const {
+        return tokensInfo;
     }
 
     const std::unordered_map<std::string, Simbolo>& getSymbolTable() const {
@@ -22,6 +33,7 @@ public:
 
 private:
     std::vector<std::string> tokens;
+    std::vector<TokenInfo> tokensInfo;
     std::unordered_map<std::string, Simbolo> symbolTable;
 
     std::string_view source;
@@ -40,6 +52,10 @@ private:
     bool scanString();
     bool scanOperatorOrDelimiter(char firstChar);
 
+    void addToken(const std::string& type,
+                  const std::string& lexeme,
+                  std::size_t line,
+                  std::size_t column);
     void addIdentifierOccurrence(const std::string& name,
                                  std::size_t line,
                                  std::size_t column);

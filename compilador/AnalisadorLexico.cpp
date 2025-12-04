@@ -27,6 +27,7 @@ namespace {
 
 AnalisadorLexico::AnalisadorLexico()
         : tokens(),
+          tokensInfo(),
           symbolTable(),
           source(),
           pos(0),
@@ -71,6 +72,14 @@ void AnalisadorLexico::skipWhitespace() {
     }
 }
 
+void AnalisadorLexico::addToken(const std::string& type,
+                                const std::string& lexeme,
+                                std::size_t line,
+                                std::size_t column) {
+    tokens.push_back(type);
+    tokensInfo.push_back({type, lexeme, line, column});
+}
+
 void AnalisadorLexico::addIdentifierOccurrence(const std::string& name,
                                                std::size_t line,
                                                std::size_t column) {
@@ -105,9 +114,9 @@ bool AnalisadorLexico::scanIdentifierOrKeyword(char firstChar) {
     }
 
     if (KEYWORDS.find(lexeme) != KEYWORDS.end()) {
-        tokens.push_back(lexeme);  // keyword mantém o lexema
+        addToken(lexeme, lexeme, startLine, startColumn);
     } else {
-        tokens.push_back("id");    // <-- ALTERADO
+        addToken("id", lexeme, startLine, startColumn);
         addIdentifierOccurrence(lexeme, startLine, startColumn);
     }
 
@@ -157,7 +166,11 @@ bool AnalisadorLexico::scanNumber(char firstChar) {
         }
     }
 
-    tokens.push_back("num");  // <-- ALTERADO
+    if (isFloat) {
+        addToken("float_constant", lexeme, startLine, startColumn);
+    } else {
+        addToken("int_constant", lexeme, startLine, startColumn);
+    }
 
     return true;
 }
@@ -168,7 +181,7 @@ bool AnalisadorLexico::scanString() {
     while (!isAtEnd()) {
         char c = advance();
         if (c == '"') {
-            tokens.push_back("string"); // <-- ALTERADO
+            addToken("string_constant", lexeme, currentLine, currentColumn);
             return true;
         }
         if (c == '\n') {
@@ -190,7 +203,7 @@ bool AnalisadorLexico::scanOperatorOrDelimiter(char c) {
         case '*':
         case '/':
         case '%':
-            tokens.push_back(std::string(1, c));
+            addToken(std::string(1, c), std::string(1, c), currentLine, currentColumn);
             return true;
 
         case '(':
@@ -201,40 +214,40 @@ bool AnalisadorLexico::scanOperatorOrDelimiter(char c) {
         case ']':
         case ';':
         case ',':
-            tokens.push_back(std::string(1, c));
+            addToken(std::string(1, c), std::string(1, c), currentLine, currentColumn);
             return true;
 
         case '<':
             if (!isAtEnd() && peek() == '=') {
                 advance();
-                tokens.push_back("<=");
+                addToken("<=", "<=", currentLine, currentColumn);
             } else {
-                tokens.push_back("<");
+                addToken("<", "<", currentLine, currentColumn);
             }
             return true;
 
         case '>':
             if (!isAtEnd() && peek() == '=') {
                 advance();
-                tokens.push_back(">=");
+                addToken(">=", ">=", currentLine, currentColumn);
             } else {
-                tokens.push_back(">");
+                addToken(">", ">", currentLine, currentColumn);
             }
             return true;
 
         case '=':
             if (!isAtEnd() && peek() == '=') {
                 advance();
-                tokens.push_back("==");
+                addToken("==", "==", currentLine, currentColumn);
             } else {
-                tokens.push_back("=");
+                addToken("=", "=", currentLine, currentColumn);
             }
             return true;
 
         case '!':
             if (!isAtEnd() && peek() == '=') {
                 advance();
-                tokens.push_back("!=");
+                addToken("!=", "!=", currentLine, currentColumn);
                 return true;
             }
             std::cerr << "Erro léxico: '!' isolado na linha "
@@ -270,6 +283,7 @@ bool AnalisadorLexico::scanToken() {
 
 bool AnalisadorLexico::analisar(std::string_view input) {
     tokens.clear();
+    tokensInfo.clear();
     symbolTable.clear();
 
     source = input;

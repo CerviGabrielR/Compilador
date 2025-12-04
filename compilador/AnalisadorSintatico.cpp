@@ -239,15 +239,9 @@ void imprimirPilha(const std::vector<std::string>& p) {
 }
 
 bool AnalisadorSintatico::analisar() {
-    std::cout << "\n=== INICIO ANALISE ===\n";
-    
     while (!pilha.empty()) {
         std::string topo = pilha.back();
         std::string tk = tokenAtual();
-
-        // 1. Imprime o estado atual (Pilha vs Entrada)
-        imprimirPilha(pilha);
-        std::cout << "ENTRADA: '" << tk << "'\n";
 
         // Verifica se é Não-Terminal
         bool naoTerminal = !ehTerminal(topo);
@@ -255,27 +249,19 @@ bool AnalisadorSintatico::analisar() {
         // CASO 1: O topo é um Terminal (ou $)
         if (!naoTerminal) { 
             if (topo == tk) {
-                std::cout << "   -> MATCH: '" << topo << "' consumido.\n";
                 pilha.pop_back();
                 consumir();
             } else {
-                std::cout << "   -> ERRO: Esperado '" << topo << "', mas veio '" << tk << "'\n";
                 return false;
             }
         } 
         // CASO 2: O topo é um Não-Terminal (Ex: PROGRAM, E, T)
         else {
             if (!tabela[topo].count(tk)) {
-                std::cout << "   -> ERRO SINTATICO: Sem regra para <" << topo << "> com token '" << tk << "'\n";
                 return false;
             }
 
             auto rhs = tabela[topo][tk];
-            
-            // Imprime qual regra foi escolhida
-            std::cout << "   -> EXPANDIR: <" << topo << "> ::= ";
-            for(auto &s : rhs) std::cout << s << " ";
-            std::cout << "\n";
 
             pilha.pop_back();
 
@@ -287,10 +273,8 @@ bool AnalisadorSintatico::analisar() {
 
     // Validação final
     if (tokenAtual() == "$") {
-        std::cout << "=== FIM: ACEITO ===\n";
         return true;
     } else {
-        std::cout << "=== FIM: REJEITADO (Pilha vazia, mas entrada sobrou) ===\n";
         return false;
     }
 }

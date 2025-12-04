@@ -1,0 +1,9 @@
+def main(int a) {
+    int x;
+    float y;
+    x = "texto";  
+    if (x > 0) {
+        break; 
+    }
+    return x;
+}

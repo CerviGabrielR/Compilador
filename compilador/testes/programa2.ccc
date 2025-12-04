@@ -1,0 +1,106 @@
+def somaRange(int inicio) {
+    int i;
+    int total;
+    total = 0;
+    for(i = inicio; i < inicio + 10; i = i + 1) {
+        total = total + i;
+    }
+    return total;
+}
+
+def escolheMaior(int a, int b) {
+    int r;
+    if(a > b) {
+        r = a;
+    } else {
+        r = b;
+    }
+    return r;
+}
+
+def main(int valor) {
+    int x;
+    int y;
+    int z;
+    float f;
+    string rotulo;
+    x = valor;
+    y = somaRange(x);
+    z = escolheMaior(x, y);
+    f = z + 2.5;
+    rotulo = "inicial";
+    if(z > 20) {
+        rotulo = "alto";
+    } else {
+        rotulo = "baixo";
+    }
+    print rotulo;
+    for(x = 0; x < 4; x = x + 1) {
+        y = y + x;
+    }
+    if(y > z) {
+        z = z + y;
+    } else {
+        z = z + x;
+    }
+    f = f + z;
+    x = x + 1;
+    y = y + 2;
+    z = z + 3;
+    f = f + 1.0;
+    print x;
+    print y;
+    print z;
+    print f;
+    read x;
+    if(x > y) {
+        z = z + x;
+    } else {
+        z = z + y;
+    }
+    f = f + z;
+    rotulo = rotulo;
+    x = x + 2;
+    y = y + 3;
+    z = z + 4;
+    x = x + 3;
+    y = y + 4;
+    z = z + 5;
+    x = x + 4;
+    y = y + 5;
+    z = z + 6;
+    x = x + 5;
+    y = y + 6;
+    z = z + 7;
+    x = x + 6;
+    y = y + 7;
+    z = z + 8;
+    x = x + 7;
+    y = y + 8;
+    z = z + 9;
+    x = x + 8;
+    y = y + 9;
+    z = z + 10;
+    x = x + 9;
+    y = y + 10;
+    z = z + 11;
+    f = f + 2.0;
+    if(x > z) {
+        x = x;
+    } else {
+        z = z;
+    }
+    x = x + 1;
+    y = y + 1;
+    z = z + 1;
+    f = f + 1.0;
+    x = x + 2;
+    y = y + 2;
+    z = z + 2;
+    f = f + 2.0;
+    print x;
+    print y;
+    print z;
+    print f;
+    return z;
+}
