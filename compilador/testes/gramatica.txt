@@ -1,0 +1,9 @@
+PROGRAM -> E
+E -> T E_linha
+E_linha -> + T E_linha
+E_linha -> ε
+T -> F T_linha
+T_linha -> * F T_linha
+T_linha -> ε
+F -> ( E )
+F -> id

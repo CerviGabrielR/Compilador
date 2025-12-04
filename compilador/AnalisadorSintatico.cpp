@@ -3,10 +3,6 @@
 #include <sstream>
 #include <iostream>
 
-// ========================
-// CARREGAR GRAMÁTICA
-// ========================
-
 void AnalisadorSintatico::carregarGramatica(const std::string& caminho) {
     std::ifstream arq(caminho);
     std::string linha;
@@ -39,9 +35,6 @@ bool AnalisadorSintatico::nullable(const std::vector<std::string>& rhs) const {
     return rhs.size() == 1 && rhs[0] == "ε";
 }
 
-// ========================
-// FIRST
-// ========================
 
 void AnalisadorSintatico::calcularFirst() {
     bool mudou = true;
@@ -98,9 +91,6 @@ void AnalisadorSintatico::calcularFirst() {
     }
 }
 
-// ========================
-// FOLLOW
-// ========================
 
 void AnalisadorSintatico::calcularFollow() {
     FOLLOW["PROGRAM"].insert("$");
@@ -124,34 +114,48 @@ void AnalisadorSintatico::calcularFollow() {
                 for (int j = i + 1; j < (int)rhs.size(); j++) {
                     auto& X = rhs[j];
 
-                    for (auto& f : FIRST[X])
-                        if (f != "ε")
-                            if (!FOLLOW[B].count(f)) {
-                                FOLLOW[B].insert(f);
-                                mudou = true;
-                            }
-
-                    if (!FIRST[X].count("ε")) {
-                        tudoNullable = false;
+                    // Se X é terminal, insere X diretamente em FOLLOW[B]
+                    if (ehTerminal(X)) {
+                        if (!FOLLOW[B].count(X)) {
+                            FOLLOW[B].insert(X);
+                            mudou = true;
+                        }
+                        tudoNullable = false; // terminal não é nullable
                         break;
                     }
-                }
 
-                if (tudoNullable) {
-                    for (auto& f : FOLLOW[A])
+                    // X é não-terminal: acrescenta FIRST(X) \ {ε} em FOLLOW(B)
+                    for (auto& f : FIRST[X]) {
+                        if (f == "ε") continue;
                         if (!FOLLOW[B].count(f)) {
                             FOLLOW[B].insert(f);
                             mudou = true;
                         }
+                    }
+
+                    // se X não gera ε, então paramos
+                    if (!FIRST[X].count("ε")) {
+                        tudoNullable = false;
+                        break;
+                    }
+
+                    // caso X gere ε, continuamos para o próximo X
+                }
+
+                // se tudo depois de B pode gerar ε, então FOLLOW(A) ⊆ FOLLOW(B)
+                if (tudoNullable) {
+                    for (auto& f : FOLLOW[A]) {
+                        if (!FOLLOW[B].count(f)) {
+                            FOLLOW[B].insert(f);
+                            mudou = true;
+                        }
+                    }
                 }
             }
         }
     }
 }
 
-// ========================
-// TABELA LL1
-// ========================
 
 void AnalisadorSintatico::montarTabela() {
     for (auto& p : gramatica) {
@@ -159,39 +163,48 @@ void AnalisadorSintatico::montarTabela() {
         auto& rhs = p.rhs;
 
         std::set<std::string> first_alpha;
+        bool rhs_eh_nulavel = true; // Assumimos que a regra é nula até provar o contrário
 
-        if (nullable(rhs)) {
-            first_alpha.insert("ε");
-        } else {
-            for (auto& X : rhs) {
-                if (ehTerminal(X)) {
-                    first_alpha.insert(X);
-                    break;
-                } else {
-                    for (auto& f : FIRST[X])
-                        if (f != "ε") first_alpha.insert(f);
+        for (auto& X : rhs) {
+            // Se encontrou epsilon explícito na regra (ex: A -> ε), continua sendo nulável
+            if (X == "ε") continue; 
 
-                    if (!FIRST[X].count("ε")) break;
+            if (ehTerminal(X)) {
+                // Se encontrou um terminal (ex: '+', 'id'), a regra não é nula
+                first_alpha.insert(X);
+                rhs_eh_nulavel = false;
+                break;
+            } else {
+                // É um Não-Terminal (ex: TERM_TAIL)
+                // Adiciona tudo do FIRST(X) em FIRST(A), exceto o epsilon
+                for (auto& f : FIRST[X]) {
+                    if (f != "ε") first_alpha.insert(f);
                 }
+
+                // A regra só continua sendo nulável se X puder produzir epsilon
+                if (!FIRST[X].count("ε")) {
+                    rhs_eh_nulavel = false;
+                    break;
+                }
+                // Se X produz epsilon, o loop continua para analisar o próximo símbolo
             }
         }
 
+        // 1. Preenche a tabela com os terminais encontrados no FIRST
         for (auto& t : first_alpha) {
-            if (t != "ε")
-                tabela[A][t] = rhs;
+            tabela[A][t] = rhs;
         }
 
-        if (first_alpha.count("ε")) {
+        // 2. Se a regra inteira pode sumir (ser nula), adiciona o FOLLOW(A)
+        if (rhs_eh_nulavel) {
             for (auto& b : FOLLOW[A]) {
-                tabela[A][b] = rhs;
+                // Apenas insere se não houver conflito ou sobrescreve (LL1 padrão)
+                tabela[A][b] = rhs; 
             }
         }
     }
 }
 
-// ========================
-// PARSER
-// ========================
 
 AnalisadorSintatico::AnalisadorSintatico(
     const std::string& caminhoGramatica,
@@ -217,38 +230,67 @@ void AnalisadorSintatico::consumir() {
     if (pos < tokens.size()) pos++;
 }
 
+
+// Função auxiliar para imprimir a pilha (adicione no .hpp ou deixe como static aqui)
+void imprimirPilha(const std::vector<std::string>& p) {
+    std::cout << "PILHA: [ ";
+    for (const auto& s : p) std::cout << s << " ";
+    std::cout << "]\t";
+}
+
 bool AnalisadorSintatico::analisar() {
+    std::cout << "\n=== INICIO ANALISE ===\n";
+    
     while (!pilha.empty()) {
         std::string topo = pilha.back();
         std::string tk = tokenAtual();
 
-        bool naoTerminal = tabela.count(topo);
+        // 1. Imprime o estado atual (Pilha vs Entrada)
+        imprimirPilha(pilha);
+        std::cout << "ENTRADA: '" << tk << "'\n";
 
+        // Verifica se é Não-Terminal
+        bool naoTerminal = !ehTerminal(topo);
+
+        // CASO 1: O topo é um Terminal (ou $)
         if (!naoTerminal) { 
             if (topo == tk) {
+                std::cout << "   -> MATCH: '" << topo << "' consumido.\n";
                 pilha.pop_back();
                 consumir();
             } else {
-                std::cerr << "Erro: esperado '" << topo
-                          << "', encontrou '" << tk << "'\n";
+                std::cout << "   -> ERRO: Esperado '" << topo << "', mas veio '" << tk << "'\n";
                 return false;
             }
-        } else {
+        } 
+        // CASO 2: O topo é um Não-Terminal (Ex: PROGRAM, E, T)
+        else {
             if (!tabela[topo].count(tk)) {
-                std::cerr << "Erro sintático: token '" << tk
-                          << "' não pode iniciar produções de <"
-                          << topo << ">\n";
+                std::cout << "   -> ERRO SINTATICO: Sem regra para <" << topo << "> com token '" << tk << "'\n";
                 return false;
             }
 
             auto rhs = tabela[topo][tk];
+            
+            // Imprime qual regra foi escolhida
+            std::cout << "   -> EXPANDIR: <" << topo << "> ::= ";
+            for(auto &s : rhs) std::cout << s << " ";
+            std::cout << "\n";
+
             pilha.pop_back();
 
             for (auto it = rhs.rbegin(); it != rhs.rend(); ++it)
-                if (*it != "ε")
+                if (*it != "ε") // Não empilha epsilon
                     pilha.push_back(*it);
         }
     }
 
-    return tokenAtual() == "$";
+    // Validação final
+    if (tokenAtual() == "$") {
+        std::cout << "=== FIM: ACEITO ===\n";
+        return true;
+    } else {
+        std::cout << "=== FIM: REJEITADO (Pilha vazia, mas entrada sobrou) ===\n";
+        return false;
+    }
 }
