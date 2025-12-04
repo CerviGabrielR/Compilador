@@ -18,7 +18,7 @@ int main() {
         def main() {
             int x;
             x = "texto";  // erro de tipo
-            break;        // fora de laço
+            break;        // fora de laco
         }
     )";
 
@@ -26,27 +26,27 @@ int main() {
 
     std::cout << "=== SEMANTICO - VALIDO ===\n";
     if (!lex.analisar(valido)) {
-        std::cout << "[FALHA] léxico\n";
+        std::cout << "[FALHA] lexico\n";
         return 1;
     }
     AnalisadorSemantico semOk(lex.getTokensInfo());
     if (!semOk.analisar()) {
-        std::cout << "[FALHA] semântico no válido\n";
+        std::cout << "[FALHA] semantico no valido\n";
         return 1;
     }
-    std::cout << "[OK] válido aceito\n\n";
+    std::cout << "[OK] valido aceito\n\n";
 
     std::cout << "=== SEMANTICO - INVALIDO ===\n";
     if (!lex.analisar(invalido)) {
-        std::cout << "[FALHA] léxico no inválido (deveria passar léxico)\n";
+        std::cout << "[FALHA] lexico no invalido (deveria passar lexico)\n";
         return 1;
     }
     AnalisadorSemantico semBad(lex.getTokensInfo());
     if (semBad.analisar()) {
-        std::cout << "[FALHA] semântico não detectou erro\n";
+        std::cout << "[FALHA] semantico nao detectou erro\n";
         return 1;
     } else {
-        std::cout << "[OK] erro semântico detectado\n";
+        std::cout << "[OK] erro semantico detectado\n";
     }
     return 0;
 }

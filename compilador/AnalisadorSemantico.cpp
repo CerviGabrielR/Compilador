@@ -84,7 +84,25 @@ void AnalisadorSemantico::reportError(const AnalisadorLexico::TokenInfo& tk, con
     std::cerr << "[Erro semântico] Linha " << tk.line << ", coluna " << tk.column << ": " << msg << "\n";
 }
 
+std::shared_ptr<AnalisadorSemantico::ExprNode> AnalisadorSemantico::makeNode(
+        const std::string& label,
+        std::shared_ptr<ExprNode> left,
+        std::shared_ptr<ExprNode> right) {
+    auto n = std::make_shared<ExprNode>();
+    n->label = label;
+    n->left = std::move(left);
+    n->right = std::move(right);
+    return n;
+}
+
+void AnalisadorSemantico::recordExpression(const ExpressionResult& res, bool capture) {
+    if (capture && res.node) {
+        expressionTrees.push_back(res.node);
+    }
+}
+
 bool AnalisadorSemantico::analisar() {
+    expressionTrees.clear();
     bool ok = program();
     return ok && !errorFound;
 }
@@ -97,6 +115,19 @@ std::unordered_map<std::string, std::string> AnalisadorSemantico::getCollectedSy
         }
     }
     return out;
+}
+
+std::vector<AnalisadorSemantico::ScopeSymbols> AnalisadorSemantico::getScopesSymbols() const {
+    std::vector<ScopeSymbols> res;
+    res.reserve(scopes.size());
+    for (const auto& scope : scopes) {
+        ScopeSymbols m;
+        for (const auto& [name, sym] : scope) {
+            m[name] = sym.type;
+        }
+        res.push_back(std::move(m));
+    }
+    return res;
 }
 
 bool AnalisadorSemantico::program() {
@@ -178,7 +209,8 @@ bool AnalisadorSemantico::statement() {
         if (pos + 1 < tokens.size() && tokens[pos + 1].type == "(") {
             // chamada de função como statement
             advance(); // id
-            functionCall(idTk);
+            auto res = functionCall(idTk);
+            recordExpression(res, true);
             expect(";", "Esperado ';' após chamada de função");
             return !errorFound;
         }
@@ -218,19 +250,21 @@ bool AnalisadorSemantico::varDecl() {
 }
 
 bool AnalisadorSemantico::atribStat(bool expectSemicolon) {
-    auto lhsType = lvalue();
-    if (lhsType.empty()) lhsType = "unknown";
+    auto lhs = lvalue();
+    if (lhs.type.empty()) lhs.type = "unknown";
     if (!expect("=", "Esperado '=' em atribuição")) return false;
-    auto exprType = expression();
+    auto expr = expression();
 
-    if (lhsType != "unknown" && exprType != "unknown" && exprType != "null") {
-        if (lhsType == "float" && exprType == "int") {
+    if (lhs.type != "unknown" && expr.type != "unknown" && expr.type != "null") {
+        if (lhs.type == "float" && expr.type == "int") {
             // ok: promoção
-        } else if (lhsType != exprType) {
-            reportError(previous(), "Tipos incompatíveis na atribuição: " + lhsType + " = " + exprType);
+        } else if (lhs.type != expr.type) {
+            reportError(previous(), "Tipos incompatíveis na atribuição: " + lhs.type + " = " + expr.type);
             return false;
         }
     }
+
+    recordExpression(expr, true);
 
     if (expectSemicolon) {
         if (!expect(";", "Esperado ';' ao final da atribuição")) return false;
@@ -240,7 +274,8 @@ bool AnalisadorSemantico::atribStat(bool expectSemicolon) {
 
 bool AnalisadorSemantico::printStat() {
     advance(); // print
-    expression();
+    auto expr = expression();
+    recordExpression(expr, true);
     expect(";", "Esperado ';' após print");
     return !errorFound;
 }
@@ -254,7 +289,8 @@ bool AnalisadorSemantico::readStat() {
 
 bool AnalisadorSemantico::returnStat() {
     advance(); // return
-    expression();
+    auto expr = expression();
+    recordExpression(expr, true);
     expect(";", "Esperado ';' após return");
     return !errorFound;
 }
@@ -262,10 +298,11 @@ bool AnalisadorSemantico::returnStat() {
 bool AnalisadorSemantico::ifStat() {
     advance(); // if
     if (!expect("(", "Esperado '(' após if")) return false;
-    auto condType = expression();
-    if (condType == "string") {
+    auto cond = expression();
+    if (cond.type == "string") {
         reportError(previous(), "Condição de if não pode ser string");
     }
+    recordExpression(cond, true);
     if (!expect(")", "Esperado ')' após condição")) return false;
     statement();
     if (match("else")) {
@@ -279,10 +316,11 @@ bool AnalisadorSemantico::forStat() {
     if (!expect("(", "Esperado '(' após for")) return false;
     atribStat(false);
     expect(";", "Esperado ';' após inicialização do for");
-    auto condType = expression();
-    if (condType == "string") {
+    auto cond = expression();
+    if (cond.type == "string") {
         reportError(previous(), "Condição de for não pode ser string");
     }
+    recordExpression(cond, true);
     expect(";", "Esperado ';' após expressão de condição do for");
     atribStat(false);
     if (!expect(")", "Esperado ')' após cabeçalho do for")) return false;
@@ -314,23 +352,26 @@ bool AnalisadorSemantico::breakStat() {
     return !errorFound;
 }
 
-std::string AnalisadorSemantico::expression() {
+AnalisadorSemantico::ExpressionResult AnalisadorSemantico::expression(bool capture) {
     auto left = numExpression();
     if (check("<") || check(">") || check("<=") || check(">=") || check("==") || check("!=")) {
         auto opTk = peek();
         advance();
         auto right = numExpression();
-        if (left != "unknown" && right != "unknown" && left != right) {
-            if (!(left == "float" && right == "int") && !(left == "int" && right == "float")) {
-                reportError(opTk, "Comparação entre tipos incompatíveis: " + left + " e " + right);
+        if (left.type != "unknown" && right.type != "unknown" && left.type != right.type) {
+            if (!(left.type == "float" && right.type == "int") && !(left.type == "int" && right.type == "float")) {
+                reportError(opTk, "Comparação entre tipos incompatíveis: " + left.type + " e " + right.type);
             }
         }
-        return "bool";
+        ExpressionResult res{"bool", makeNode(opTk.type, left.node, right.node)};
+        recordExpression(res, capture);
+        return res;
     }
+    recordExpression(left, capture);
     return left;
 }
 
-std::string AnalisadorSemantico::numExpression() {
+AnalisadorSemantico::ExpressionResult AnalisadorSemantico::numExpression() {
     auto left = term();
     while (check("+") || check("-")) {
         auto opTk = peek();
@@ -341,7 +382,7 @@ std::string AnalisadorSemantico::numExpression() {
     return left;
 }
 
-std::string AnalisadorSemantico::term() {
+AnalisadorSemantico::ExpressionResult AnalisadorSemantico::term() {
     auto left = unary();
     while (check("*") || check("/") || check("%")) {
         auto opTk = peek();
@@ -352,23 +393,23 @@ std::string AnalisadorSemantico::term() {
     return left;
 }
 
-std::string AnalisadorSemantico::unary() {
+AnalisadorSemantico::ExpressionResult AnalisadorSemantico::unary() {
     if (match("+") || match("-")) {
         auto opTk = previous();
         auto t = unary();
-        if (t != "int" && t != "float" && t != "unknown") {
+        if (t.type != "int" && t.type != "float" && t.type != "unknown") {
             reportError(opTk, "Operador unário só é permitido para int/float");
         }
-        return t;
+        return {t.type, makeNode(opTk.type, t.node)};
     }
     return factor();
 }
 
-std::string AnalisadorSemantico::factor() {
-    if (match("int_constant")) return "int";
-    if (match("float_constant")) return "float";
-    if (match("string_constant")) return "string";
-    if (match("null")) return "null";
+AnalisadorSemantico::ExpressionResult AnalisadorSemantico::factor() {
+    if (match("int_constant")) return { "int", makeNode(previous().lexeme) };
+    if (match("float_constant")) return { "float", makeNode(previous().lexeme) };
+    if (match("string_constant")) return { "string", makeNode(previous().lexeme) };
+    if (match("null")) return { "null", makeNode("null") };
 
     if (check("id")) {
         auto idTk = peek();
@@ -388,32 +429,34 @@ std::string AnalisadorSemantico::factor() {
 
     reportError(peek(), "Fator inválido");
     advance();
-    return "unknown";
+    return {"unknown", nullptr};
 }
 
-std::string AnalisadorSemantico::lvalue() {
-    if (!expect("id", "Esperado identificador")) return "unknown";
+AnalisadorSemantico::ExpressionResult AnalisadorSemantico::lvalue() {
+    if (!expect("id", "Esperado identificador")) return {"unknown", nullptr};
     auto idTk = previous();
     auto sym = resolveSymbol(idTk.lexeme);
     if (!sym) {
         reportError(idTk, "Identificador '" + idTk.lexeme + "' não declarado");
         // ainda consome possíveis [ ]
     }
+    std::shared_ptr<ExprNode> node = makeNode(idTk.lexeme);
     while (match("[")) {
-        numExpression();
+        auto idx = numExpression();
         expect("]", "Esperado ']' em acesso de array");
+        node = makeNode("[]", node, idx.node);
     }
-    return sym ? sym->type : "unknown";
+    return {sym ? sym->type : "unknown", node};
 }
 
-std::string AnalisadorSemantico::functionCall(const AnalisadorLexico::TokenInfo& idToken) {
+AnalisadorSemantico::ExpressionResult AnalisadorSemantico::functionCall(const AnalisadorLexico::TokenInfo& idToken) {
     const Symbol* sym = resolveSymbol(idToken.lexeme);
     if (!sym || !sym->isFunction) {
         reportError(idToken, "Função '" + idToken.lexeme + "' não declarada");
     }
 
     expect("(", "Esperado '(' em chamada de função");
-    std::vector<std::string> args;
+    std::vector<ExpressionResult> args;
     if (!check(")")) {
         do {
             args.push_back(expression());
@@ -428,51 +471,60 @@ std::string AnalisadorSemantico::functionCall(const AnalisadorLexico::TokenInfo&
         } else {
             for (std::size_t i = 0; i < args.size(); ++i) {
                 auto expectedType = sym->params[i * 2];
-                if (expectedType != "unknown" && args[i] != "unknown" && args[i] != expectedType) {
-                    if (!(expectedType == "float" && args[i] == "int")) {
+                if (expectedType != "unknown" && args[i].type != "unknown" && args[i].type != expectedType) {
+                    if (!(expectedType == "float" && args[i].type == "int")) {
                         reportError(idToken, "Argumento " + std::to_string(i + 1) + " da função '" +
                                                idToken.lexeme + "' espera " + expectedType +
-                                               " mas recebeu " + args[i]);
+                                               " mas recebeu " + args[i].type);
                     }
                 }
             }
         }
-        return sym->returnType;
     }
 
-    return "unknown";
+    std::shared_ptr<ExprNode> argChain = nullptr;
+    if (!args.empty()) {
+        argChain = args.front().node;
+        for (std::size_t i = 1; i < args.size(); ++i) {
+            argChain = makeNode(",", argChain, args[i].node);
+        }
+    }
+    auto callNode = makeNode("call " + idToken.lexeme, argChain, nullptr);
+    return {sym && sym->isFunction ? sym->returnType : "unknown", callNode};
 }
 
-std::string AnalisadorSemantico::combineArithmetic(const std::string& lhs,
-                                                   const std::string& rhs,
+AnalisadorSemantico::ExpressionResult AnalisadorSemantico::combineArithmetic(const ExpressionResult& lhs,
+                                                   const ExpressionResult& rhs,
                                                    const std::string& op,
                                                    const AnalisadorLexico::TokenInfo& tk) {
-    if (lhs == "unknown" || rhs == "unknown") return "unknown";
-    if (lhs == "null" || rhs == "null") {
+    auto node = makeNode(op, lhs.node, rhs.node);
+
+    if (lhs.type == "unknown" || rhs.type == "unknown") return { "unknown", node };
+    if (lhs.type == "null" || rhs.type == "null") {
         reportError(tk, "Operação aritmética com 'null' não é permitida");
-        return "unknown";
+        return {"unknown", node};
     }
 
-    if (op == "%" && (lhs != "int" || rhs != "int")) {
+    if (op == "%" && (lhs.type != "int" || rhs.type != "int")) {
         reportError(tk, "Operador % requer operandos int");
-        return "unknown";
+        return {"unknown", node};
     }
 
-    if (lhs == "float" || rhs == "float") {
-        if ((lhs == "int" || lhs == "float") && (rhs == "int" || rhs == "float")) {
-            return "float";
+    if (lhs.type == "float" || rhs.type == "float") {
+        if ((lhs.type == "int" || lhs.type == "float") && (rhs.type == "int" || rhs.type == "float")) {
+            return {"float", node};
         }
     }
 
-    if (lhs == rhs) {
+    if (lhs.type == rhs.type) {
         // string/string permitido somente em +
-        if (lhs == "string" && op != "+") {
+        if (lhs.type == "string" && op != "+") {
             reportError(tk, "Operação com strings suportada apenas com '+'");
-            return "unknown";
+            return {"unknown", node};
         }
-        return lhs;
+        return {lhs.type, node};
     }
 
-    reportError(tk, "Operação entre tipos incompatíveis: " + lhs + " " + op + " " + rhs);
-    return "unknown";
+    reportError(tk, "Operação entre tipos incompatíveis: " + lhs.type + " " + op + " " + rhs.type);
+    return {"unknown", node};
 }

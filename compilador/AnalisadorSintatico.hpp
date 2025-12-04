@@ -3,6 +3,7 @@
 #include <string>
 #include <map>
 #include <set>
+#include "AnalisadorLexico.hpp"
 
 class AnalisadorSintatico {
 public:
@@ -17,6 +18,8 @@ public:
 
     AnalisadorSintatico(const std::string& caminhoGramatica,
                         const std::vector<std::string>& tokens);
+    AnalisadorSintatico(const std::string& caminhoGramatica,
+                        const std::vector<AnalisadorLexico::TokenInfo>& tokensInfo);
 
     bool analisar();
 
@@ -24,9 +27,11 @@ private:
     Gramatica gramatica;
     TabelaLL1 tabela;
     std::vector<std::string> tokens;
+    std::vector<AnalisadorLexico::TokenInfo> tokensInfo;
 
     size_t pos = 0;
     std::vector<std::string> pilha;
+    bool errorReported = false;
 
     // carregamento
     void carregarGramatica(const std::string& caminho);
@@ -45,5 +50,8 @@ private:
 
     // parser
     std::string tokenAtual() const;
+    const AnalisadorLexico::TokenInfo& tokenInfoAtual() const;
     void consumir();
+    bool reportMismatch(const std::string& esperado, const std::string& encontrado);
+    bool reportTabelaVazia(const std::string& topo, const std::string& lookahead);
 };

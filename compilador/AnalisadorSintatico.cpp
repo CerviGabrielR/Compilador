@@ -215,6 +215,29 @@ AnalisadorSintatico::AnalisadorSintatico(
     pilha.push_back("$");
     pilha.push_back("PROGRAM");
 
+    // Preenche tokensInfo com placeholders para permitir mensagens com posição.
+    tokensInfo.reserve(tokensEntrada.size());
+    for (std::size_t i = 0; i < tokensEntrada.size(); ++i) {
+        tokensInfo.push_back({tokensEntrada[i], "", 0, i + 1});
+    }
+
+    carregarGramatica(caminhoGramatica);
+    calcularFirst();
+    calcularFollow();
+    montarTabela();
+}
+
+AnalisadorSintatico::AnalisadorSintatico(
+    const std::string& caminhoGramatica,
+    const std::vector<AnalisadorLexico::TokenInfo>& tokensInfoEntrada
+) {
+    pilha.push_back("$");
+    pilha.push_back("PROGRAM");
+    tokensInfo = tokensInfoEntrada;
+    tokens.reserve(tokensInfoEntrada.size());
+    for (const auto& tk : tokensInfoEntrada) {
+        tokens.push_back(tk.type);
+    }
     carregarGramatica(caminhoGramatica);
     calcularFirst();
     calcularFollow();
@@ -226,8 +249,33 @@ std::string AnalisadorSintatico::tokenAtual() const {
     return "$";
 }
 
+const AnalisadorLexico::TokenInfo& AnalisadorSintatico::tokenInfoAtual() const {
+    if (!tokensInfo.empty() && pos < tokensInfo.size()) return tokensInfo[pos];
+    static AnalisadorLexico::TokenInfo dummy{"$", "", 0, 0};
+    if (!tokensInfo.empty()) return tokensInfo.back();
+    return dummy;
+}
+
 void AnalisadorSintatico::consumir() {
     if (pos < tokens.size()) pos++;
+}
+
+bool AnalisadorSintatico::reportMismatch(const std::string& esperado, const std::string& encontrado) {
+    if (errorReported) return false;
+    errorReported = true;
+    auto tk = tokenInfoAtual();
+    std::cerr << "[Erro sintático] Esperado '" << esperado << "' mas encontrou '" << encontrado
+              << "' na linha " << tk.line << ", coluna " << tk.column << "\n";
+    return false;
+}
+
+bool AnalisadorSintatico::reportTabelaVazia(const std::string& topo, const std::string& lookahead) {
+    if (errorReported) return false;
+    errorReported = true;
+    auto tk = tokenInfoAtual();
+    std::cerr << "[Erro sintático] Nenhuma produção para (" << topo << ", " << lookahead
+              << ") na linha " << tk.line << ", coluna " << tk.column << "\n";
+    return false;
 }
 
 
@@ -245,13 +293,13 @@ bool AnalisadorSintatico::analisar() {
                 pilha.pop_back();
                 consumir();
             } else {
-                return false;
+                return reportMismatch(topo, tk);
             }
         } 
         // CASO 2: O topo é um Não-Terminal (Ex: PROGRAM, E, T)
         else {
             if (!tabela[topo].count(tk)) {
-                return false;
+                return reportTabelaVazia(topo, tk);
             }
 
             auto rhs = tabela[topo][tk];

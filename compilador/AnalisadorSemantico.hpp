@@ -1,6 +1,7 @@
 #pragma once
 
 #include <string>
+#include <memory>
 #include <unordered_map>
 #include <vector>
 #include "AnalisadorLexico.hpp"
@@ -14,6 +15,17 @@ public:
 
     bool analisar();
     std::unordered_map<std::string, std::string> getCollectedSymbols() const;
+    using ScopeSymbols = std::unordered_map<std::string, std::string>;
+    std::vector<ScopeSymbols> getScopesSymbols() const;
+    struct ExprNode {
+        std::string label;
+        std::shared_ptr<ExprNode> left;
+        std::shared_ptr<ExprNode> right;
+    };
+
+    const std::vector<std::shared_ptr<ExprNode>>& getExpressionTrees() const {
+        return expressionTrees;
+    }
 
 private:
     struct Symbol {
@@ -23,12 +35,18 @@ private:
         std::string returnType = "unknown";
     };
 
+    struct ExpressionResult {
+        std::string type;
+        std::shared_ptr<ExprNode> node;
+    };
+
     const std::vector<AnalisadorLexico::TokenInfo>& tokens;
     std::size_t pos = 0;
     int loopDepth = 0;
     bool errorFound = false;
 
     std::vector<std::unordered_map<std::string, Symbol>> scopes;
+    std::vector<std::shared_ptr<ExprNode>> expressionTrees;
 
     // parsing helpers
     const AnalisadorLexico::TokenInfo& peek() const;
@@ -64,14 +82,22 @@ private:
     bool breakStat();
 
     // expressions
-    std::string expression();
-    std::string numExpression();
-    std::string term();
-    std::string unary();
-    std::string factor();
-    std::string lvalue();
-    std::string functionCall(const AnalisadorLexico::TokenInfo& idToken);
+    ExpressionResult expression(bool capture = true);
+    ExpressionResult numExpression();
+    ExpressionResult term();
+    ExpressionResult unary();
+    ExpressionResult factor();
+    ExpressionResult lvalue();
+    ExpressionResult functionCall(const AnalisadorLexico::TokenInfo& idToken);
 
     // helpers for type checking
-    std::string combineArithmetic(const std::string& lhs, const std::string& rhs, const std::string& op, const AnalisadorLexico::TokenInfo& tk);
+    ExpressionResult combineArithmetic(const ExpressionResult& lhs,
+                                       const ExpressionResult& rhs,
+                                       const std::string& op,
+                                       const AnalisadorLexico::TokenInfo& tk);
+
+    std::shared_ptr<ExprNode> makeNode(const std::string& label,
+                                       std::shared_ptr<ExprNode> left = nullptr,
+                                       std::shared_ptr<ExprNode> right = nullptr);
+    void recordExpression(const ExpressionResult& res, bool capture);
 };

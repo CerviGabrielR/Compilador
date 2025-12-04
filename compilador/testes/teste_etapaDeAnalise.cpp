@@ -31,7 +31,7 @@ int main() {
     }
     std::cout << "[OK] Léxico aceitou.\n";
 
-    AnalisadorSintatico sint("../gramaticaLL1.txt", lex.getTokens());
+    AnalisadorSintatico sint("../gramaticaLL1.txt", lex.getTokensInfo());
     if (!sint.analisar()) {
         std::cerr << "[FALHA] Erro na análise sintática.\n";
         return 1;

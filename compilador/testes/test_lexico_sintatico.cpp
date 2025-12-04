@@ -25,7 +25,7 @@ int main() {
         std::cout << "[FALHA] léxico\n";
         return 1;
     }
-    AnalisadorSintatico sintVal("gramaticaLL1.txt", lex.getTokens());
+    AnalisadorSintatico sintVal("gramaticaLL1.txt", lex.getTokensInfo());
     if (!sintVal.analisar()) {
         std::cout << "[FALHA] sintático no válido\n";
         return 1;
@@ -37,7 +37,7 @@ int main() {
         std::cout << "[OK] léxico já rejeitou\n";
         return 0;
     }
-    AnalisadorSintatico sintInv("gramaticaLL1.txt", lex.getTokens());
+    AnalisadorSintatico sintInv("gramaticaLL1.txt", lex.getTokensInfo());
     bool okSint = sintInv.analisar();
     if (okSint) {
         std::cout << "[FALHA] sintático não detectou erro\n";

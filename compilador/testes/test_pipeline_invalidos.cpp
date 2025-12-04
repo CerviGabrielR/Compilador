@@ -16,7 +16,7 @@ std::string lerArquivo(const std::string& caminho) {
 bool pipeline(const std::string& codigo) {
     AnalisadorLexico lex;
     if (!lex.analisar(codigo)) return false;
-    AnalisadorSintatico sint("gramaticaLL1.txt", lex.getTokens());
+    AnalisadorSintatico sint("gramaticaLL1.txt", lex.getTokensInfo());
     if (!sint.analisar()) return false;
     AnalisadorSemantico sem(lex.getTokensInfo());
     return sem.analisar();
@@ -25,8 +25,8 @@ bool pipeline(const std::string& codigo) {
 int main() {
     // esperado falhar
     std::vector<std::string> invalidos = {
-        "programa_invalido.ccc",
-        "programa_invalido_sintaxe.ccc"
+        "testes/programa_invalido.ccc",
+        "testes/programa_invalido_sintaxe.ccc"
     };
     bool tudoFalhou = true;
     for (auto& arq : invalidos) {

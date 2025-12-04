@@ -10,7 +10,7 @@
 bool pipeline(const std::string& codigo) {
     AnalisadorLexico lex;
     if (!lex.analisar(codigo)) return false;
-    AnalisadorSintatico sint("gramaticaLL1.txt", lex.getTokens());
+    AnalisadorSintatico sint("gramaticaLL1.txt", lex.getTokensInfo());
     if (!sint.analisar()) return false;
     AnalisadorSemantico sem(lex.getTokensInfo());
     if (!sem.analisar()) return false;
