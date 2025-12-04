@@ -231,13 +231,6 @@ void AnalisadorSintatico::consumir() {
 }
 
 
-// Função auxiliar para imprimir a pilha (adicione no .hpp ou deixe como static aqui)
-void imprimirPilha(const std::vector<std::string>& p) {
-    std::cout << "PILHA: [ ";
-    for (const auto& s : p) std::cout << s << " ";
-    std::cout << "]\t";
-}
-
 bool AnalisadorSintatico::analisar() {
     while (!pilha.empty()) {
         std::string topo = pilha.back();
