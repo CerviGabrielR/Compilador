@@ -82,7 +82,7 @@ private:
     bool breakStat();
 
     // expressions
-    ExpressionResult expression(bool capture = true);
+    ExpressionResult expression(bool capture = false);
     ExpressionResult numExpression();
     ExpressionResult term();
     ExpressionResult unary();

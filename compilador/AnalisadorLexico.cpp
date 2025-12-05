@@ -1,3 +1,4 @@
+// Integrantes: Antônio Torres; Gustavo Bodi; Lucas Brand; Ewaldo Uhlmann; Gabriel Cervi
 #include "AnalisadorLexico.hpp"
 
 #include <cctype>

@@ -1,3 +1,4 @@
+// Integrantes: Antônio Torres; Gustavo Bodi; Lucas Brand; Ewaldo Uhlmann; Gabriel Cervi
 #include "AnalisadorSintatico.hpp"
 #include <fstream>
 #include <sstream>

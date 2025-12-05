@@ -1,3 +1,4 @@
+// Integrantes: Antônio Torres; Gustavo Bodi; Lucas Brand; Ewaldo Uhlmann; Gabriel Cervi
 #include <fstream>
 #include <iostream>
 #include <sstream>

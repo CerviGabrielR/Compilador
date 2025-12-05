@@ -1,3 +1,4 @@
+// Integrantes: Antônio Torres; Gustavo Bodi; Lucas Brand; Ewaldo Uhlmann; Gabriel Cervi
 #include "AnalisadorSemantico.hpp"
 #include <iostream>
 
@@ -253,7 +254,7 @@ bool AnalisadorSemantico::atribStat(bool expectSemicolon) {
     auto lhs = lvalue();
     if (lhs.type.empty()) lhs.type = "unknown";
     if (!expect("=", "Esperado '=' em atribuição")) return false;
-    auto expr = expression();
+    auto expr = expression(true);
 
     if (lhs.type != "unknown" && expr.type != "unknown" && expr.type != "null") {
         if (lhs.type == "float" && expr.type == "int") {
@@ -264,8 +265,6 @@ bool AnalisadorSemantico::atribStat(bool expectSemicolon) {
         }
     }
 
-    recordExpression(expr, true);
-
     if (expectSemicolon) {
         if (!expect(";", "Esperado ';' ao final da atribuição")) return false;
     }
@@ -274,8 +273,7 @@ bool AnalisadorSemantico::atribStat(bool expectSemicolon) {
 
 bool AnalisadorSemantico::printStat() {
     advance(); // print
-    auto expr = expression();
-    recordExpression(expr, true);
+    expression(true);
     expect(";", "Esperado ';' após print");
     return !errorFound;
 }
@@ -289,8 +287,7 @@ bool AnalisadorSemantico::readStat() {
 
 bool AnalisadorSemantico::returnStat() {
     advance(); // return
-    auto expr = expression();
-    recordExpression(expr, true);
+    expression(true);
     expect(";", "Esperado ';' após return");
     return !errorFound;
 }
@@ -298,11 +295,10 @@ bool AnalisadorSemantico::returnStat() {
 bool AnalisadorSemantico::ifStat() {
     advance(); // if
     if (!expect("(", "Esperado '(' após if")) return false;
-    auto cond = expression();
+    auto cond = expression(true);
     if (cond.type == "string") {
         reportError(previous(), "Condição de if não pode ser string");
     }
-    recordExpression(cond, true);
     if (!expect(")", "Esperado ')' após condição")) return false;
     statement();
     if (match("else")) {
@@ -316,11 +312,10 @@ bool AnalisadorSemantico::forStat() {
     if (!expect("(", "Esperado '(' após for")) return false;
     atribStat(false);
     expect(";", "Esperado ';' após inicialização do for");
-    auto cond = expression();
+    auto cond = expression(true);
     if (cond.type == "string") {
         reportError(previous(), "Condição de for não pode ser string");
     }
-    recordExpression(cond, true);
     expect(";", "Esperado ';' após expressão de condição do for");
     atribStat(false);
     if (!expect(")", "Esperado ')' após cabeçalho do for")) return false;

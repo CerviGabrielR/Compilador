@@ -1,3 +1,4 @@
+// Integrantes: Antônio Torres; Gustavo Bodi; Lucas Brand; Ewaldo Uhlmann; Gabriel Cervi
 #include "AnalisadorGCI.hpp"
 #include <iostream>
 
