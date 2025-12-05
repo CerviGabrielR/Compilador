@@ -45,3 +45,17 @@ Use `make tests` para compilar e executar todos; os binários ficam em `build/te
 ## Saídas esperadas
 - Em caso de sucesso: tabela de símbolos (nome->tipo) e código intermediário gerado.
 - Em caso de erro: primeira falha encontrada (léxica, sintática ou semântica) é reportada com linha/coluna. As mensagens do sintático são silenciosas (retornam false).
+
+## Gramática ConvCC-2025-2
+A gramática originalmente disponibilizada para o trabalho (CC-2025-2) estava na forma BNF (Backus-Naur Form) e para o trabalho era necessário que a gramática utilizada estivesse de acordo com LL1, portanto foram feitas as seguintes alterações na gramática para transformá-la na ConvCC-2025-2 com as características pedidas:
+1. Deixar a gramática na forma convencional através da remoção dos operadores opcional(?), Fechamentos de Kleene (*) e Fechamentos Positivo (+)
+2. Separação produções com o operador ou (|) em produções diferentes. Ex: S -> (a|b) => S -> a  S -> b
+3. Transformação para LL1 por meio da remoção de recursão à esquerda e aplicação da fatoração à esquerda
+4. Resolução de ambiguidades de análise da tabela LL1, isto é, células com múltiplas produções possíveis para um par não-terminal/terminal
+   - `ATRIB_TAIL` apresentava conflito de *lookahead* ao tentar derivar `ident`, que poderia pertencer a uma **variável simples** (via `EXPRESSION`) ou a uma **chamada de função** (via `FUNCCALL`).
+        * **Solução:** A produção que gerava `ident` foi "subida" e refatorada para `ident FUNCCALL_OR_ATRIB`. As produções de `EXPRESSION` e `FUNCCALL` que geravam o conflito foram reestruturadas e movidas para que o analisador pudesse decidir, com um *lookahead* (o próximo *token*), o caminho correto a seguir.
+    - Ambiguidade do `if-else` (Dangling Else): O clássico problema do `if-else` ambíguo (não saber a qual `if` um `else` aninhado pertence).
+        * **Solução:** Implementamos uma solução que força o emparelhamento, garantindo que o `else` pertença ao `if` mais próximo:
+            1.  O não-terminal `IFSTAT` sempre deriva um `ELSESTAT`.
+            2.  `ELSESTAT` é definido para derivar `else STATEMENT` (para a cláusula `else` presente) **ou** o **símbolo vazio ($\epsilon$)** (para a cláusula ausente).
+            3.  O `STATEMENT` decorrente de `IFSTAT` foi restrito a `'{ STATELIST }'`, o que garante que o bloco do `if` sempre crie um novo escopo. Isso ajuda a estruturar a gramática para que o par `if-else` seja resolvido no escopo correto.
