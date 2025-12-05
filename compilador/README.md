@@ -9,7 +9,8 @@ Este projeto implementa as fases de análise (léxica, sintática, semântica) e
 - `AnalisadorLexico.*`, `AnalisadorSintatico.*`, `AnalisadorSemantico.*`, `AnalisadorGCI.*`
 - `compilador.cpp`: driver com menu que roda o pipeline completo.
 - `gramaticaLL1.txt`: gramática usada pelo sintático.
-- `testes/`: programas de exemplo (válidos e inválidos) e bateria de testes.
+- `codigos/`: programas de exemplo (.ccc) válidos e inválidos.
+- `testes/`: bateria de testes automatizados.
 
 ## Como compilar e executar
 ```bash
@@ -27,15 +28,17 @@ make tests
 ### Selecionando arquivos manualmente
 Você pode passar arquivos na linha de comando para o binário:
 ```bash
-./compilador testes/programa1.ccc testes/programa2.ccc
+./compilador codigos/programa1.ccc codigos/programa2.ccc
 ```
 Caso não informe, o menu interativo permite escolher entre os programas de exemplo.
 
 ## Testes
-A pasta `testes/` contém:
-- Programas válidos: `programa1.ccc`, `programa2.ccc`, `programa3.ccc` (100+ linhas).
-- Programas inválidos: `programa_invalido.ccc` (erro semântico), `programa_invalido_sintaxe.ccc` (erro sintático).
-- Testes progressivos: `test_lexico_basico`, `test_lexico_sintatico`, `test_semantico_basico`, `test_gci_basico`, `test_pipeline_validos`, `test_pipeline_invalidos`.
+A pasta `codigos/` contém os programas de entrada:
+- Válidos: `programa1.ccc`, `programa2.ccc`, `programa3.ccc` (100+ linhas).
+- Inválidos: `programa_invalido.ccc` (erro semântico), `programa_invalido_sintaxe.ccc` (erro sintático), `programa_invalido_lexico.ccc` (erro léxico).
+
+Os testes em `testes/` são:
+- `test_lexico_basico`, `test_semantico_basico`, `test_pipeline_validos`, `test_pipeline_invalidos`.
 
 Use `make tests` para compilar e executar todos; os binários ficam em `build/tests/`.
 

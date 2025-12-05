@@ -123,13 +123,14 @@ static bool pipeline(const std::string& codigoFonte, const std::string& gramatic
 }
 
 int main(int argc, char** argv) {
+    const std::string pastaCodigos = "codigos/";
     std::vector<std::string> arquivos = {
-        "testes/programa1.ccc",
-        "testes/programa2.ccc",
-        "testes/programa3.ccc",
-        "testes/programa_invalido.ccc",        // erro semantico
-        "testes/programa_invalido_sintaxe.ccc",// erro sintatico
-        "testes/programa_invalido_lexico.ccc"  // erro lexico
+        pastaCodigos + "programa1.ccc",
+        pastaCodigos + "programa2.ccc",
+        pastaCodigos + "programa3.ccc",
+        pastaCodigos + "programa_invalido.ccc",        // erro semantico
+        pastaCodigos + "programa_invalido_sintaxe.ccc",// erro sintatico
+        pastaCodigos + "programa_invalido_lexico.ccc"  // erro lexico
     };
 
     if (argc > 1) {

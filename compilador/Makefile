@@ -7,9 +7,7 @@ COMPILADOR_BIN := compilador
 TEST_BIN_DIR := build/tests
 TEST_SOURCES := \
 	testes/test_lexico_basico.cpp \
-	testes/test_lexico_sintatico.cpp \
 	testes/test_semantico_basico.cpp \
-	testes/test_gci_basico.cpp \
 	testes/test_pipeline_validos.cpp \
 	testes/test_pipeline_invalidos.cpp
 

@@ -24,9 +24,10 @@ bool pipeline(const std::string& codigo) {
 
 int main() {
     // esperado falhar
+    const std::string pastaCodigos = "codigos/";
     std::vector<std::string> invalidos = {
-        "testes/programa_invalido.ccc",
-        "testes/programa_invalido_sintaxe.ccc"
+        pastaCodigos + "programa_invalido.ccc",
+        pastaCodigos + "programa_invalido_sintaxe.ccc"
     };
     bool tudoFalhou = true;
     for (auto& arq : invalidos) {

@@ -26,10 +26,11 @@ std::string lerArquivo(const std::string& caminho) {
 }
 
 int main() {
+    const std::string pastaCodigos = "codigos/";
     std::vector<std::string> arquivos = {
-        "programa1.ccc",
-        "programa2.ccc",
-        "programa3.ccc"
+        pastaCodigos + "programa1.ccc",
+        pastaCodigos + "programa2.ccc",
+        pastaCodigos + "programa3.ccc"
     };
 
     bool ok = true;

@@ -6,12 +6,6 @@ build/
 
 # Binários de testes gerados manualmente
 testes/test_lexico_basico
-testes/test_lexico_sintatico
 testes/test_semantico_basico
-testes/test_gci_basico
 testes/test_pipeline_validos
 testes/test_pipeline_invalidos
-testes/etapaDeAnalise_test
-testes/gci_test
-testes/programas100_test
-testes/semantico_test
