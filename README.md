@@ -4,6 +4,7 @@ Este projeto implementa as fases de análise (léxica, sintática, semântica) e
 
 ## Requisitos
 - C++17 (`g++` 11+)
+- Docker instalado (para usar o fluxo com container)
 
 ## Estrutura principal
 - `AnalisadorLexico.*`, `AnalisadorSintatico.*`, `AnalisadorSemantico.*`, `AnalisadorGCI.*`
