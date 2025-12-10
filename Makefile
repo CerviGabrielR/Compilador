@@ -1,5 +1,8 @@
-CXX := g++
-CXXFLAGS := -std=c++17 -Wall -Wextra -I.
+# Prefer the course-required compiler version (Ubuntu 22.04 ships g++ 11.4.0).
+# Falls back to the default g++ if g++-11 is not available.
+CXX ?= $(shell if command -v g++-11 >/dev/null 2>&1; then echo g++-11; else echo g++; fi)
+
+CXXFLAGS ?= -std=c++17 -Wall -Wextra -I.
 
 LIB_SRCS := AnalisadorLexico.cpp AnalisadorSintatico.cpp AnalisadorSemantico.cpp AnalisadorGCI.cpp
 COMPILADOR_BIN := compilador
