@@ -13,20 +13,34 @@ Este projeto implementa as fases de análise (léxica, sintática, semântica) e
 - `testes/`: bateria de testes automatizados.
 
 ## Como compilar e executar
+Requer toolchain compatível com o enunciado (g++ 11.4). Se possível, use Docker para garantir a versão.
+
 ```bash
-# Na pasta compilador/
-make            # compila e roda todos os testes, depois executa o compilador nos 3 programas válidos
+# Build da imagem (Ubuntu 22.04 com g++ 11.4)
+docker build -t compilador .
 
-# Apenas compilar e rodar o compilador com menu
-make compilador
-./compilador          # menu interativo (opções para programa1/2/3 válidos e programa_invalido)
+# Compilar e rodar todos os testes
+docker run --rm compilador make tests
 
-# Rodar todos os testes
-make tests
+# Trabalhar dentro do container (código da imagem criada no build)
+docker run --rm -it compilador bash
+# dentro do container: make compilador && ./compilador
+
+# Opcional: montar o diretório local no container (para editar sem rebuild)
+docker run --rm -it -v "$PWD":/app compilador bash
+# dentro do container: make tests
+```
+
+### Ambiente local (sem Docker)
+Certifique-se de ter `g++-11` (ou `g++` >= 11.4) disponível no PATH.
+```bash
+make tests       # compila e roda todos os testes
+make compilador  # compila o binário
+./compilador     # menu interativo
 ```
 
 ### Selecionando arquivos manualmente
-Você pode passar arquivos na linha de comando para o binário:
+Após compilar (`make compilador` no ambiente escolhido), você pode passar arquivos na linha de comando para o binário:
 ```bash
 ./compilador codigos/programa1.ccc codigos/programa2.ccc
 ```
@@ -40,7 +54,7 @@ A pasta `codigos/` contém os programas de entrada:
 Os testes em `testes/` são:
 - `test_lexico_basico`, `test_semantico_basico`, `test_pipeline_validos`, `test_pipeline_invalidos`.
 
-Use `make tests` para compilar e executar todos; os binários ficam em `build/tests/`.
+Use `make tests` (no container ou local) para compilar e executar todos; os binários ficam em `build/tests/`.
 
 ## Saídas esperadas
 - Em caso de sucesso: tabela de símbolos (nome->tipo) e código intermediário gerado.
