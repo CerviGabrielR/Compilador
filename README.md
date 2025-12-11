@@ -23,6 +23,9 @@ Requer toolchain compatível com o enunciado (g++ 11.4). Se possível, use Docke
 # Build da imagem (Ubuntu 22.04 com g++ 11.4)
 docker build -t compilador .
 
+# Rodar o compilador com menu iterativo
+docker run --rm -it compilador bash -c "make clean && make compilador && ./compilador"
+
 # Compilar e rodar todos os testes
 docker run --rm compilador bash -c "make clean && make tests"
 
